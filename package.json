@@ -1,0 +1,26 @@
+{
+  "name": "stripe-connect-payout-app",
+  "version": "1.0.0",
+  "description": "Simple Node.js app using Stripe SDK with Connect Functions to trigger payouts",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "stripe": "^14.21.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "stripe",
+    "connect",
+    "payout",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT"
+}
