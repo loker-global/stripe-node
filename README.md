@@ -70,6 +70,92 @@ curl -X POST http://localhost:3000/payout \
   }'
 ```
 
+### Getting Account Balance
+
+To get the balance of a connected account:
+
+```bash
+curl -X GET http://localhost:3000/balance/acct_your_connected_account_id
+```
+
+Example response:
+```json
+{
+  "object": "balance",
+  "available": [
+    {
+      "amount": 5000,
+      "currency": "usd",
+      "source_types": {
+        "card": 5000
+      }
+    }
+  ],
+  "connect_reserved": [
+    {
+      "amount": 0,
+      "currency": "usd"
+    }
+  ],
+  "livemode": false,
+  "pending": [
+    {
+      "amount": 1000,
+      "currency": "usd",
+      "source_types": {
+        "card": 1000
+      }
+    }
+  ]
+}
+```
+
+### Listing Payouts
+
+To list recent payouts for a connected account:
+
+```bash
+curl -X GET http://localhost:3000/payouts/acct_your_connected_account_id
+```
+
+You can also specify a limit (default is 5):
+
+```bash
+curl -X GET http://localhost:3000/payouts/acct_your_connected_account_id?limit=10
+```
+
+Example response:
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "po_1234567890abcdef",
+      "object": "payout",
+      "amount": 1000,
+      "arrival_date": 1642636800,
+      "automatic": false,
+      "balance_transaction": "txn_1234567890abcdef",
+      "created": 1642636800,
+      "currency": "usd",
+      "description": null,
+      "destination": "ba_1234567890abcdef",
+      "failure_code": null,
+      "failure_message": null,
+      "livemode": false,
+      "metadata": {},
+      "method": "standard",
+      "source_type": "card",
+      "statement_descriptor": null,
+      "status": "paid",
+      "type": "bank_account"
+    }
+  ],
+  "has_more": false,
+  "url": "/v1/payouts"
+}
+```
+
 ### Development
 
 ```bash

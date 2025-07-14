@@ -30,7 +30,7 @@ async function createPayout(amount, currency, connectedAccountId) {
     const payout = await stripe.payouts.create({
       amount: amount,
       currency: currency,
-      method: 'instant', // or 'standard'
+      method: 'standard', // or 'instant'
     }, {
       stripeAccount: connectedAccountId, // This is the key for Connect Functions
     });
