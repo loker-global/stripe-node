@@ -164,6 +164,57 @@ npm run dev
 
 This uses nodemon for automatic restart on file changes.
 
+## Utility Scripts
+
+### Check Folder Sizes
+
+Monitor disk usage of your project directories:
+
+```bash
+# Run the size checker script
+npm run check-sizes
+
+# Or run directly
+./check-sizes.sh
+```
+
+This script provides:
+- **node_modules size** with detailed breakdown
+- **Top 10 largest packages** in node_modules
+- **Package and file counts**
+- **Other directory sizes** (.git, src, dist, etc.)
+- **Heavy package detection**
+- **Cleanup suggestions**
+
+### Project Cleanup
+
+```bash
+# Clean node_modules and package-lock.json
+npm run clean
+
+# Clean and fresh install
+npm run fresh-install
+```
+
+### Manual Size Checking Commands
+
+```bash
+# Check node_modules size
+du -sh node_modules
+
+# List largest packages in node_modules
+du -sh node_modules/* | sort -hr | head -10
+
+# Count total files in node_modules
+find node_modules -type f | wc -l
+
+# Check overall project size
+du -sh .
+
+# Check .git folder size
+du -sh .git
+```
+
 ## Key Stripe Connect Functions
 
 ### 1. Creating Payouts

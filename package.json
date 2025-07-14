@@ -5,7 +5,10 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "check-sizes": "./check-sizes.sh",
+    "clean": "rm -rf node_modules package-lock.json",
+    "fresh-install": "npm run clean && npm install"
   },
   "dependencies": {
     "stripe": "^14.21.0",
