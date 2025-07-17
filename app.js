@@ -105,6 +105,38 @@ async function listPayouts(connectedAccountId, limit = 5) {
 }
 
 /**
+ * List recent balance transactions for a connected account
+ * @param {string} connectedAccountId - Stripe connected account ID
+ * @param {number} limit - Number of transactions to retrieve
+ */
+async function listTransactions(connectedAccountId, limit = 10) {
+  try {
+    console.log('🔄 Fetching recent transactions...');
+    
+    const transactions = await stripe.balanceTransactions.list({
+      limit: limit,
+    }, {
+      stripeAccount: connectedAccountId,
+    });
+
+    console.log('✅ Transactions retrieved successfully!');
+    console.log('📋 Recent transactions:');
+    
+    transactions.data.forEach((transaction, index) => {
+      const amount = transaction.amount / 100;
+      const fee = transaction.fee / 100;
+      const net = transaction.net / 100;
+      console.log(`  ${index + 1}. ID: ${transaction.id}, Type: ${transaction.type}, Amount: $${amount} ${transaction.currency.toUpperCase()}, Net: $${net}, Fee: $${fee}`);
+    });
+
+    return transactions;
+  } catch (error) {
+    console.error('❌ Error fetching transactions:', error.message);
+    throw error;
+  }
+}
+
+/**
  * Main function to demonstrate Stripe Connect Functions
  */
 async function main() {
@@ -150,10 +182,23 @@ async function main() {
 
 // Additional utility functions for Express server (optional)
 const express = require('express');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Set up EJS as the template engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(express.json());
+
+// Serve the main dashboard page
+app.get('/', (req, res) => {
+  res.render('index');
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -199,6 +244,17 @@ app.get('/payouts/:accountId', async (req, res) => {
   }
 });
 
+// List transactions endpoint
+app.get('/transactions/:accountId', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const transactions = await listTransactions(req.params.accountId, limit);
+    res.json(transactions);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🌐 Server running at http://localhost:${port}`);
@@ -207,6 +263,7 @@ app.listen(port, () => {
   console.log(`   GET  /balance/:accountId - Get account balance`);
   console.log(`   POST /payout - Create payout (requires amount, currency, connectedAccountId in body)`);
   console.log(`   GET  /payouts/:accountId - List recent payouts`);
+  console.log(`   GET  /transactions/:accountId - List recent transactions`);
   console.log('');
 });
 

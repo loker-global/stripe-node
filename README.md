@@ -55,6 +55,7 @@ This will:
 - `GET /balance/:accountId` - Get connected account balance
 - `POST /payout` - Create a payout
 - `GET /payouts/:accountId` - List recent payouts
+- `GET /transactions/:accountId` - List recent transactions
 
 ### Creating a Payout
 
@@ -156,6 +157,51 @@ Example response:
 }
 ```
 
+### Listing Transactions
+
+To list recent transactions for a connected account:
+
+```bash
+curl -X GET http://localhost:3000/transactions/acct_your_connected_account_id
+```
+
+You can also specify a limit (default is 10):
+
+```bash
+curl -X GET http://localhost:3000/transactions/acct_your_connected_account_id?limit=20
+```
+
+Example response:
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "txn_1234567890abcdef",
+      "object": "balance_transaction",
+      "amount": 1000,
+      "created": 1642636800,
+      "currency": "usd",
+      "description": "Charge for example@example.com",
+      "fee": 59,
+      "fee_details": [
+        {
+          "amount": 59,
+          "currency": "usd",
+          "description": "Stripe processing fees",
+          "type": "stripe_fee"
+        }
+      ],
+      "net": 941,
+      "status": "available",
+      "type": "charge"
+    }
+  ],
+  "has_more": false,
+  "url": "/v1/balance_transactions"
+}
+```
+
 ### Development
 
 ```bash
@@ -247,6 +293,16 @@ const payouts = await stripe.payouts.list({
 });
 ```
 
+### 4. Listing Transactions
+
+```javascript
+const transactions = await stripe.balanceTransactions.list({
+  limit: 10,
+}, {
+  stripeAccount: connectedAccountId,
+});
+```
+
 ## Important Notes
 
 - **Test Mode**: Make sure to use test API keys and test connected accounts during development
@@ -271,3 +327,23 @@ const payouts = await stripe.payouts.list({
 ## License
 
 MIT
+
+## PDF Export Feature
+
+Generate professional PDF reports containing:
+- **Account balance information** with available and pending amounts
+- **Recent payouts** with amounts, status, and details
+- **Transaction history** with gross amounts, net amounts, and fees
+- **Timestamp and account details** for record keeping
+
+To generate a PDF:
+1. Load data (balance, payouts, or transactions)
+2. Click the **"Export PDF Report"** button in the header
+3. A professionally formatted PDF will be downloaded automatically
+
+The PDF includes:
+- **Professional formatting** with headers and footers
+- **Complete financial data** from all loaded sections
+- **Timestamp** of when the report was generated
+- **Page numbers** for multi-page reports
+- **Account identification** for tracking

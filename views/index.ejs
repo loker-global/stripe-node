@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Connect Functions Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #667eea;
+            --background-start: #667eea;
+            --background-end: #764ba2;
+            --text-color: #333;
+            --card-bg: white;
+            --card-text: #2d3748;
+            --input-border: #e2e8f0;
+            --input-focus: #667eea;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: background 0.5s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            position: relative;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .pdf-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .pdf-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .pdf-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .pdf-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .theme-picker {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            z-index: 1000;
+        }
+
+        .theme-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .theme-btn.active {
+            border-color: white;
+            border-width: 3px;
+            transform: scale(1.2);
+        }
+
+        .theme-btn.red-blue {
+            background: linear-gradient(135deg, #dc2626, #2563eb);
+        }
+
+        .theme-btn.black-yellow {
+            background: linear-gradient(135deg, #1f2937, #f59e0b);
+        }
+
+        .theme-btn.black-orange {
+            background: linear-gradient(135deg, #111827, #ea580c);
+        }
+
+        .theme-btn.red-white {
+            background: linear-gradient(135deg, #dc2626, #f8fafc);
+        }
+
+        .theme-btn.blue-lightblue {
+            background: linear-gradient(135deg, #1e40af, #7dd3fc);
+        }
+
+        .theme-btn.glow-afterdark {
+            background: linear-gradient(135deg, #8b5cf6, #0f172a);
+        }
+
+        .theme-btn.default {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.5s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: var(--card-text);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.5s ease;
+        }
+
+        .card h2 i {
+            color: var(--accent-color);
+            transition: color 0.5s ease;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: var(--card-bg);
+            color: var(--card-text);
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--input-focus);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #718096;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            color: #22543d;
+        }
+
+        .result.error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #742a2a;
+        }
+
+        .balance-display {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+        .balance-amount {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .payouts-list {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .payout-item {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payout-info {
+            flex: 1;
+        }
+
+        .payout-amount {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        .payout-details {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .payout-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .payout-status.paid {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .payout-status.pending {
+            background: #fef5e7;
+            color: #c05621;
+        }
+
+        .payout-status.failed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--input-border);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .transactions-list {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .transaction-item {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid transparent;
+        }
+
+        .transaction-item.charge {
+            border-left-color: #22c55e;
+        }
+
+        .transaction-item.refund {
+            border-left-color: #ef4444;
+        }
+
+        .transaction-item.payout {
+            border-left-color: #3b82f6;
+        }
+
+        .transaction-item.adjustment {
+            border-left-color: #f59e0b;
+        }
+
+        .transaction-item.fee {
+            border-left-color: #6366f1;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-type {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+            text-transform: capitalize;
+        }
+
+        .transaction-details {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .transaction-amounts {
+            text-align: right;
+        }
+
+        .transaction-gross {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+        }
+
+        .transaction-net {
+            color: #22c55e;
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+
+        .transaction-fee {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .theme-picker {
+                position: static;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+            
+            .theme-btn {
+                width: 25px;
+                height: 25px;
+            }
+
+            .header-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .pdf-controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-controls">
+                <div class="pdf-controls">
+                    <button class="pdf-btn" onclick="generatePDF()" id="pdfBtn">
+                        <i class="fas fa-file-pdf"></i> Export PDF Report
+                    </button>
+                </div>
+                <div class="theme-picker">
+                    <div class="theme-btn default active" onclick="changeTheme('default')" title="Default (Purple/Blue)"></div>
+                    <div class="theme-btn red-blue" onclick="changeTheme('red-blue')" title="Red/Blue"></div>
+                    <div class="theme-btn black-yellow" onclick="changeTheme('black-yellow')" title="Black/Yellow"></div>
+                    <div class="theme-btn black-orange" onclick="changeTheme('black-orange')" title="Black/Orange"></div>
+                    <div class="theme-btn red-white" onclick="changeTheme('red-white')" title="Red/White"></div>
+                    <div class="theme-btn blue-lightblue" onclick="changeTheme('blue-lightblue')" title="Blue/Light Blue"></div>
+                    <div class="theme-btn glow-afterdark" onclick="changeTheme('glow-afterdark')" title="Glow/After Dark"></div>
+                </div>
+            </div>
+            <h1><i class="fas fa-credit-card"></i> Stripe Connect Functions Demo</h1>
+            <p>Manage payouts and connected account balances with style</p>
+        </div>
+
+        <div class="dashboard">
+            <!-- Balance Card -->
+            <div class="card">
+                <h2><i class="fas fa-wallet"></i> Account Balance</h2>
+                <div class="form-group">
+                    <label for="balanceAccountId">Connected Account ID</label>
+                    <input type="text" id="balanceAccountId" placeholder="acct_your_account_id_here" />
+                </div>
+                <button class="btn" onclick="getBalance()">
+                    <i class="fas fa-search"></i> Get Balance
+                </button>
+                
+                <div class="loading" id="balanceLoading">
+                    <div class="spinner"></div>
+                    <p>Fetching balance...</p>
+                </div>
+                
+                <div class="balance-display" id="balanceDisplay"></div>
+                <div class="result" id="balanceResult"></div>
+            </div>
+
+            <!-- Payout Card -->
+            <div class="card">
+                <h2><i class="fas fa-paper-plane"></i> Create Payout</h2>
+                <div class="form-group">
+                    <label for="payoutAccountId">Connected Account ID</label>
+                    <input type="text" id="payoutAccountId" placeholder="acct_your_account_id_here" />
+                </div>
+                <div class="form-group">
+                    <label for="payoutAmount">Amount (in cents)</label>
+                    <input type="number" id="payoutAmount" placeholder="1000" min="50" />
+                </div>
+                <div class="form-group">
+                    <label for="payoutCurrency">Currency</label>
+                    <select id="payoutCurrency">
+                        <option value="usd">USD</option>
+                        <option value="eur">EUR</option>
+                        <option value="gbp">GBP</option>
+                        <option value="cad">CAD</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="createPayout()">
+                    <i class="fas fa-rocket"></i> Create Payout
+                </button>
+                
+                <div class="loading" id="payoutLoading">
+                    <div class="spinner"></div>
+                    <p>Creating payout...</p>
+                </div>
+                
+                <div class="result" id="payoutResult"></div>
+            </div>
+
+            <!-- Payouts List Card -->
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Recent Payouts</h2>
+                <div class="form-group">
+                    <label for="payoutsAccountId">Connected Account ID</label>
+                    <input type="text" id="payoutsAccountId" placeholder="acct_your_account_id_here" />
+                </div>
+                <div class="form-group">
+                    <label for="payoutsLimit">Limit (max 100)</label>
+                    <input type="number" id="payoutsLimit" value="5" min="1" max="100" />
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="getPayouts()">
+                        <i class="fas fa-sync"></i> Get Payouts
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearPayouts()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="loading" id="payoutsLoading">
+                    <div class="spinner"></div>
+                    <p>Loading payouts...</p>
+                </div>
+                
+                <div class="payouts-list" id="payoutsList"></div>
+                <div class="result" id="payoutsResult"></div>
+            </div>
+
+            <!-- Transactions List Card -->
+            <div class="card">
+                <h2><i class="fas fa-exchange-alt"></i> Recent Transactions</h2>
+                <div class="form-group">
+                    <label for="transactionsAccountId">Connected Account ID</label>
+                    <input type="text" id="transactionsAccountId" placeholder="acct_your_account_id_here" />
+                </div>
+                <div class="form-group">
+                    <label for="transactionsLimit">Limit (max 100)</label>
+                    <input type="number" id="transactionsLimit" value="10" min="1" max="100" />
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="getTransactions()">
+                        <i class="fas fa-sync"></i> Get Transactions
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearTransactions()">
+                        <i class="fas fa-trash"></i> Clear
+                    </button>
+                </div>
+                
+                <div class="loading" id="transactionsLoading">
+                    <div class="spinner"></div>
+                    <p>Loading transactions...</p>
+                </div>
+                
+                <div class="transactions-list" id="transactionsList"></div>
+                <div class="result" id="transactionsResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme management
+        const themes = {
+            'default': {
+                '--primary-color': '#667eea',
+                '--secondary-color': '#764ba2',
+                '--accent-color': '#667eea',
+                '--background-start': '#667eea',
+                '--background-end': '#764ba2',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#667eea'
+            },
+            'red-blue': {
+                '--primary-color': '#dc2626',
+                '--secondary-color': '#2563eb',
+                '--accent-color': '#dc2626',
+                '--background-start': '#dc2626',
+                '--background-end': '#2563eb',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#dc2626'
+            },
+            'black-yellow': {
+                '--primary-color': '#1f2937',
+                '--secondary-color': '#f59e0b',
+                '--accent-color': '#f59e0b',
+                '--background-start': '#1f2937',
+                '--background-end': '#f59e0b',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#f59e0b'
+            },
+            'black-orange': {
+                '--primary-color': '#111827',
+                '--secondary-color': '#ea580c',
+                '--accent-color': '#ea580c',
+                '--background-start': '#111827',
+                '--background-end': '#ea580c',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#ea580c'
+            },
+            'red-white': {
+                '--primary-color': '#dc2626',
+                '--secondary-color': '#f8fafc',
+                '--accent-color': '#dc2626',
+                '--background-start': '#dc2626',
+                '--background-end': '#f8fafc',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#dc2626'
+            },
+            'blue-lightblue': {
+                '--primary-color': '#1e40af',
+                '--secondary-color': '#7dd3fc',
+                '--accent-color': '#1e40af',
+                '--background-start': '#1e40af',
+                '--background-end': '#7dd3fc',
+                '--text-color': '#333',
+                '--card-bg': 'white',
+                '--card-text': '#2d3748',
+                '--input-border': '#e2e8f0',
+                '--input-focus': '#1e40af'
+            },
+            'glow-afterdark': {
+                '--primary-color': '#8b5cf6',
+                '--secondary-color': '#0f172a',
+                '--accent-color': '#8b5cf6',
+                '--background-start': '#8b5cf6',
+                '--background-end': '#0f172a',
+                '--text-color': '#f8fafc',
+                '--card-bg': '#1e293b',
+                '--card-text': '#f8fafc',
+                '--input-border': '#475569',
+                '--input-focus': '#8b5cf6'
+            }
+        };
+
+        function changeTheme(themeName) {
+            const theme = themes[themeName];
+            const root = document.documentElement;
+            
+            // Apply theme variables
+            Object.entries(theme).forEach(([property, value]) => {
+                root.style.setProperty(property, value);
+            });
+            
+            // Update active theme button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.theme-btn.${themeName}`).classList.add('active');
+            
+            // Save theme to localStorage
+            localStorage.setItem('selectedTheme', themeName);
+            
+            // Add a nice transition effect
+            document.body.style.transition = 'all 0.5s ease';
+        }
+
+        // Load saved theme on page load
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
+            changeTheme(savedTheme);
+        }
+
+        // Utility functions
+        function showLoading(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function hideLoading(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showResult(id, message, isError = false) {
+            const result = document.getElementById(id);
+            result.textContent = message;
+            result.className = `result ${isError ? 'error' : 'success'}`;
+            result.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                result.style.display = 'none';
+            }, 5000);
+        }
+
+        function formatCurrency(amount, currency) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency.toUpperCase()
+            }).format(amount / 100);
+        }
+
+        function formatDate(timestamp) {
+            return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // Get account balance
+        async function getBalance() {
+            const accountId = document.getElementById('balanceAccountId').value.trim();
+            
+            if (!accountId) {
+                showResult('balanceResult', 'Please enter a connected account ID', true);
+                return;
+            }
+
+            showLoading('balanceLoading');
+            document.getElementById('balanceDisplay').style.display = 'none';
+
+            try {
+                const response = await fetch(`/balance/${accountId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get balance');
+                }
+
+                displayBalance(data);
+                showResult('balanceResult', 'Balance retrieved successfully!');
+                updatePDFButtonState();
+            } catch (error) {
+                showResult('balanceResult', `Error: ${error.message}`, true);
+            } finally {
+                hideLoading('balanceLoading');
+            }
+        }
+
+        function displayBalance(balance) {
+            const display = document.getElementById('balanceDisplay');
+            let html = '<h3>Available Balance</h3>';
+            
+            balance.available.forEach(item => {
+                html += `
+                    <div class="balance-item">
+                        <span>${item.currency.toUpperCase()}</span>
+                        <span class="balance-amount">${formatCurrency(item.amount, item.currency)}</span>
+                    </div>
+                `;
+            });
+
+            if (balance.pending.length > 0) {
+                html += '<h3 style="margin-top: 20px;">Pending Balance</h3>';
+                balance.pending.forEach(item => {
+                    html += `
+                        <div class="balance-item">
+                            <span>${item.currency.toUpperCase()}</span>
+                            <span class="balance-amount">${formatCurrency(item.amount, item.currency)}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            display.innerHTML = html;
+            display.style.display = 'block';
+        }
+
+        // Create payout
+        async function createPayout() {
+            const accountId = document.getElementById('payoutAccountId').value.trim();
+            const amount = parseInt(document.getElementById('payoutAmount').value);
+            const currency = document.getElementById('payoutCurrency').value;
+
+            if (!accountId || !amount || !currency) {
+                showResult('payoutResult', 'Please fill in all fields', true);
+                return;
+            }
+
+            if (amount < 50) {
+                showResult('payoutResult', 'Minimum payout amount is 50 cents', true);
+                return;
+            }
+
+            showLoading('payoutLoading');
+
+            try {
+                const response = await fetch('/payout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        currency: currency,
+                        connectedAccountId: accountId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create payout');
+                }
+
+                showResult('payoutResult', `Payout created successfully! ID: ${data.id}, Amount: ${formatCurrency(data.amount, data.currency)}`);
+                
+                // Clear form
+                document.getElementById('payoutAmount').value = '';
+            } catch (error) {
+                showResult('payoutResult', `Error: ${error.message}`, true);
+            } finally {
+                hideLoading('payoutLoading');
+            }
+        }
+
+        // Get payouts
+        async function getPayouts() {
+            const accountId = document.getElementById('payoutsAccountId').value.trim();
+            const limit = parseInt(document.getElementById('payoutsLimit').value) || 5;
+
+            if (!accountId) {
+                showResult('payoutsResult', 'Please enter a connected account ID', true);
+                return;
+            }
+
+            showLoading('payoutsLoading');
+            document.getElementById('payoutsList').style.display = 'none';
+
+            try {
+                const response = await fetch(`/payouts/${accountId}?limit=${limit}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get payouts');
+                }
+
+                displayPayouts(data.data);
+                showResult('payoutsResult', `${data.data.length} payouts retrieved successfully!`);
+                updatePDFButtonState();
+            } catch (error) {
+                showResult('payoutsResult', `Error: ${error.message}`, true);
+            } finally {
+                hideLoading('payoutsLoading');
+            }
+        }
+
+        function displayPayouts(payouts) {
+            const list = document.getElementById('payoutsList');
+            
+            if (payouts.length === 0) {
+                list.innerHTML = '<p style="text-align: center; padding: 20px; color: #718096;">No payouts found</p>';
+            } else {
+                let html = '';
+                payouts.forEach(payout => {
+                    html += `
+                        <div class="payout-item">
+                            <div class="payout-info">
+                                <div class="payout-amount">${formatCurrency(payout.amount, payout.currency)}</div>
+                                <div class="payout-details">
+                                    ID: ${payout.id} • 
+                                    Created: ${formatDate(payout.created)} • 
+                                    Method: ${payout.method}
+                                </div>
+                            </div>
+                            <div class="payout-status ${payout.status}">${payout.status}</div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            list.style.display = 'block';
+        }
+
+        function clearPayouts() {
+            document.getElementById('payoutsList').style.display = 'none';
+            document.getElementById('payoutsResult').style.display = 'none';
+            updatePDFButtonState();
+        }
+
+        // Get transactions
+        async function getTransactions() {
+            const accountId = document.getElementById('transactionsAccountId').value.trim();
+            const limit = parseInt(document.getElementById('transactionsLimit').value) || 10;
+
+            if (!accountId) {
+                showResult('transactionsResult', 'Please enter a connected account ID', true);
+                return;
+            }
+
+            showLoading('transactionsLoading');
+            document.getElementById('transactionsList').style.display = 'none';
+
+            try {
+                const response = await fetch(`/transactions/${accountId}?limit=${limit}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to get transactions');
+                }
+
+                displayTransactions(data.data);
+                showResult('transactionsResult', `${data.data.length} transactions retrieved successfully!`);
+                updatePDFButtonState();
+            } catch (error) {
+                showResult('transactionsResult', `Error: ${error.message}`, true);
+            } finally {
+                hideLoading('transactionsLoading');
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const list = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = '<p style="text-align: center; padding: 20px; color: #718096;">No transactions found</p>';
+            } else {
+                let html = '';
+                transactions.forEach(transaction => {
+                    const grossAmount = formatCurrency(transaction.amount, transaction.currency);
+                    const netAmount = formatCurrency(transaction.net, transaction.currency);
+                    const feeAmount = formatCurrency(transaction.fee, transaction.currency);
+                    const typeClass = transaction.type.replace('_', '-');
+                    
+                    html += `
+                        <div class="transaction-item ${typeClass}">
+                            <div class="transaction-info">
+                                <div class="transaction-type">${transaction.type.replace('_', ' ')}</div>
+                                <div class="transaction-details">
+                                    ID: ${transaction.id} • 
+                                    Created: ${formatDate(transaction.created)} • 
+                                    ${transaction.description || 'No description'}
+                                </div>
+                            </div>
+                            <div class="transaction-amounts">
+                                <div class="transaction-gross">${grossAmount}</div>
+                                <div class="transaction-net">Net: ${netAmount}</div>
+                                <div class="transaction-fee">Fee: ${feeAmount}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }
+            
+            list.style.display = 'block';
+        }
+
+        function clearTransactions() {
+            document.getElementById('transactionsList').style.display = 'none';
+            document.getElementById('transactionsResult').style.display = 'none';
+            updatePDFButtonState();
+        }
+
+        // PDF Generation
+        async function generatePDF() {
+            const pdfBtn = document.getElementById('pdfBtn');
+            pdfBtn.disabled = true;
+            pdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                // Set up PDF styling
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 20;
+                let yPosition = margin;
+
+                // Add header
+                pdf.setFontSize(20);
+                pdf.setTextColor(64, 64, 64);
+                pdf.text('Stripe Connect Functions Report', pageWidth / 2, yPosition, { align: 'center' });
+                yPosition += 15;
+
+                pdf.setFontSize(12);
+                pdf.setTextColor(128, 128, 128);
+                pdf.text(`Generated on ${new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}`, pageWidth / 2, yPosition, { align: 'center' });
+                yPosition += 25;
+
+                // Add balance information
+                const balanceDisplay = document.getElementById('balanceDisplay');
+                if (balanceDisplay.style.display !== 'none') {
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(64, 64, 64);
+                    pdf.text('Account Balance', margin, yPosition);
+                    yPosition += 10;
+
+                    const accountId = document.getElementById('balanceAccountId').value;
+                    if (accountId) {
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(128, 128, 128);
+                        pdf.text(`Account ID: ${accountId}`, margin, yPosition);
+                        yPosition += 10;
+                    }
+
+                    // Get balance data from the display
+                    const balanceItems = balanceDisplay.querySelectorAll('.balance-item');
+                    balanceItems.forEach(item => {
+                        const currency = item.querySelector('span').textContent;
+                        const amount = item.querySelector('.balance-amount').textContent;
+                        
+                        pdf.setFontSize(12);
+                        pdf.setTextColor(64, 64, 64);
+                        pdf.text(`${currency}: ${amount}`, margin + 10, yPosition);
+                        yPosition += 8;
+                    });
+                    yPosition += 10;
+                }
+
+                // Add payouts information
+                const payoutsList = document.getElementById('payoutsList');
+                if (payoutsList.style.display !== 'none') {
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(64, 64, 64);
+                    pdf.text('Recent Payouts', margin, yPosition);
+                    yPosition += 10;
+
+                    const payoutItems = payoutsList.querySelectorAll('.payout-item');
+                    payoutItems.forEach(item => {
+                        const amount = item.querySelector('.payout-amount').textContent;
+                        const details = item.querySelector('.payout-details').textContent;
+                        const status = item.querySelector('.payout-status').textContent;
+
+                        pdf.setFontSize(12);
+                        pdf.setTextColor(64, 64, 64);
+                        pdf.text(`${amount} - ${status.toUpperCase()}`, margin + 10, yPosition);
+                        yPosition += 6;
+                        
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(128, 128, 128);
+                        pdf.text(details, margin + 10, yPosition);
+                        yPosition += 10;
+
+                        // Check if we need a new page
+                        if (yPosition > pageHeight - 30) {
+                            pdf.addPage();
+                            yPosition = margin;
+                        }
+                    });
+                    yPosition += 10;
+                }
+
+                // Add transactions information
+                const transactionsList = document.getElementById('transactionsList');
+                if (transactionsList.style.display !== 'none') {
+                    // Check if we need a new page
+                    if (yPosition > pageHeight - 100) {
+                        pdf.addPage();
+                        yPosition = margin;
+                    }
+
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(64, 64, 64);
+                    pdf.text('Recent Transactions', margin, yPosition);
+                    yPosition += 10;
+
+                    const transactionItems = transactionsList.querySelectorAll('.transaction-item');
+                    transactionItems.forEach(item => {
+                        const type = item.querySelector('.transaction-type').textContent;
+                        const details = item.querySelector('.transaction-details').textContent;
+                        const grossAmount = item.querySelector('.transaction-gross').textContent;
+                        const netAmount = item.querySelector('.transaction-net').textContent;
+                        const feeAmount = item.querySelector('.transaction-fee').textContent;
+
+                        pdf.setFontSize(12);
+                        pdf.setTextColor(64, 64, 64);
+                        pdf.text(`${type.toUpperCase()} - ${grossAmount}`, margin + 10, yPosition);
+                        yPosition += 6;
+                        
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(128, 128, 128);
+                        pdf.text(details, margin + 10, yPosition);
+                        yPosition += 5;
+                        
+                        pdf.text(`${netAmount} | ${feeAmount}`, margin + 10, yPosition);
+                        yPosition += 12;
+
+                        // Check if we need a new page
+                        if (yPosition > pageHeight - 30) {
+                            pdf.addPage();
+                            yPosition = margin;
+                        }
+                    });
+                }
+
+                // Add footer
+                const totalPages = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    pdf.setPage(i);
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(128, 128, 128);
+                    pdf.text(`Page ${i} of ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+                    pdf.text('Generated by Stripe Connect Functions Demo', pageWidth / 2, pageHeight - 5, { align: 'center' });
+                }
+
+                // Save the PDF
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                pdf.save(`stripe-connect-report-${timestamp}.pdf`);
+
+                // Show success message
+                showResult('balanceResult', 'PDF report generated successfully!');
+
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                showResult('balanceResult', 'Error generating PDF: ' + error.message, true);
+            } finally {
+                pdfBtn.disabled = false;
+                pdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF Report';
+            }
+        }
+
+        // Helper function to check if any data is available for PDF
+        function hasDataForPDF() {
+            const balanceDisplay = document.getElementById('balanceDisplay');
+            const payoutsList = document.getElementById('payoutsList');
+            const transactionsList = document.getElementById('transactionsList');
+            
+            return (balanceDisplay.style.display !== 'none') || 
+                   (payoutsList.style.display !== 'none') || 
+                   (transactionsList.style.display !== 'none');
+        }
+
+        // Update PDF button state based on available data
+        function updatePDFButtonState() {
+            const pdfBtn = document.getElementById('pdfBtn');
+            if (hasDataForPDF()) {
+                pdfBtn.disabled = false;
+                pdfBtn.title = 'Export current data as PDF';
+            } else {
+                pdfBtn.disabled = true;
+                pdfBtn.title = 'Load some data first (balance, payouts, or transactions)';
+            }
+        }
+
+        // Load saved theme on page load
+        window.addEventListener('load', async function() {
+            // Load saved theme first
+            loadSavedTheme();
+            
+            // Initialize PDF button state
+            updatePDFButtonState();
+            
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                console.log('✅ Server health check:', data);
+            } catch (error) {
+                console.error('❌ Server health check failed:', error);
+            }
+        });
+    </script>
+</body>
+</html>
